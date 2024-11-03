@@ -4,6 +4,12 @@ using static Raylib_cs.Raylib;
 
 namespace Sphere;
 
+readonly struct Shape(Vector3[] points, Vector4 color)
+{
+    public Vector3[] Points { get; init; } = points;
+    public Vector4 Color { get; init; } = color;
+}
+
 static class Program
 {
     const int Scale = 4;
@@ -30,11 +36,8 @@ static class Program
 
         Span<Vector4> pixels = new Vector4[Width * Height];
 
-        Vector3[] spherePoints = GenerateSphere(100, 40, 20);
-        Vector4 sphereColor = ColorNormalize(Color.DarkGreen);
-
-        Vector3[] torusPoints = GenerateTorus(70, 30, 40, 20);
-        Vector4 torusColor = ColorNormalize(Color.Maroon);
+        Shape sphere = new (GenerateSphere(100, 40, 20), ColorNormalize(Color.DarkGreen));
+        Shape torus = new (GenerateTorus(70, 30, 40, 20), ColorNormalize(Color.Maroon));
 
         float morphTime = 0;
         bool isMorphingToTorus = false;
@@ -61,10 +64,10 @@ static class Program
             float time = (float)GetTime();
             Matrix4x4 rotationMatrix = Matrix4x4.CreateFromYawPitchRoll(time, time, time);
 
-            for (int i = 0; i < spherePoints.Length; i++)
+            for (int i = 0; i < sphere.Points.Length; i++)
             {
                 // transform points with rotation matrix
-                Vector3 transformedPoint = Vector3.Transform(Vector3.Lerp(spherePoints[i], torusPoints[i], morphTime),
+                Vector3 transformedPoint = Vector3.Transform(Vector3.Lerp(sphere.Points[i], torus.Points[i], morphTime),
                     rotationMatrix);
 
                 // apply simple perspective correction and map to screen space
@@ -74,7 +77,8 @@ static class Program
                 // centre screen point
                 screenPoint += centre;
 
-                Vector4 color = Vector4.Lerp(sphereColor, torusColor, morphTime);
+                // lerp colour and draw pixel
+                Vector4 color = Vector4.Lerp(sphere.Color, torus.Color, morphTime);
                 pixels[(int)screenPoint.Y * Width + (int)screenPoint.X] = color;
             }
 
