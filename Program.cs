@@ -24,7 +24,7 @@ static class Program
 
     static void Main()
     {
-        InitWindow(WindowWidth, WindowHeight, "Sphere");
+        InitWindow(WindowWidth, WindowHeight, "Morph");
         SetTargetFPS(60);
 
         Vector2 centre = new(Width / 2, Height / 2);
