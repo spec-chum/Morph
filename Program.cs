@@ -36,12 +36,14 @@ static class Program
 
         Span<Vector4> pixels = new Vector4[Width * Height];
 
-        Shape sphere = new (GenerateSphere(100, 40, 20), ColorNormalize(Color.DarkGreen));
-        Shape torus = new (GenerateTorus(70, 30, 40, 20), ColorNormalize(Color.Maroon));
+        Shape sphere = new(GenerateSphere(100, 40, 20),
+            ColorNormalize(Color.DarkGreen));
+        Shape torus = new(GenerateTorus(70, 30, 40, 20),
+            ColorNormalize(Color.Maroon));
 
         float morphTime = 0;
+        float holdTime = 0;
         bool isMorphingToTorus = false;
-        float holdTime = 0f;
 
         while (!WindowShouldClose())
         {
@@ -79,7 +81,7 @@ static class Program
 
                 // lerp colour and draw pixel
                 Vector4 color = Vector4.Lerp(sphere.Color, torus.Color, morphTime);
-                pixels[(int)screenPoint.Y * Width + (int)screenPoint.X] = color;
+                pixels[((int)screenPoint.Y * Width) + (int)screenPoint.X] = color;
             }
 
             UpdateTexture<Vector4>(texture, pixels);
@@ -128,8 +130,8 @@ static class Program
             for (int j = 0; j < numPointsHorizontal; j++)
             {
                 float theta = j * incrementHorizontal;
-                float x = (ringRadius + tubeRadius * MathF.Cos(phi)) * MathF.Cos(theta);
-                float y = (ringRadius + tubeRadius * MathF.Cos(phi)) * MathF.Sin(theta);
+                float x = (ringRadius + (tubeRadius * MathF.Cos(phi))) * MathF.Cos(theta);
+                float y = (ringRadius + (tubeRadius * MathF.Cos(phi))) * MathF.Sin(theta);
                 float z = tubeRadius * MathF.Sin(phi);
 
                 points[index++] = new Vector3(x, y, z);
