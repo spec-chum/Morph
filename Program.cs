@@ -24,13 +24,11 @@ static class Program
         Vector2 centre = new(Width / 2, Height / 2);
 
         Image image = GenImageColor(Width, Height, Color.Black);
+        ImageFormat(ref image, PixelFormat.UncompressedR32G32B32A32);
         Texture2D texture = LoadTextureFromImage(image);
+        UnloadImage(image);
 
-        Span<Color> pixels;
-        unsafe
-        {
-            pixels = new Span<Color>((Color*)image.Data, Width * Height);
-        }
+        Span<Vector4> pixels = new Vector4[Width * Height];
 
         Vector3[] spherePoints = GenerateSphere(100, 40, 20);
         Vector4 sphereColor = ColorNormalize(Color.DarkGreen);
@@ -44,7 +42,7 @@ static class Program
 
         while (!WindowShouldClose())
         {
-            ImageClearBackground(ref image, Color.Black);
+            pixels.Fill(Vector4.UnitW);
 
             morphTime += isMorphingToTorus ? MorphSpeed : -MorphSpeed;
             morphTime = Math.Clamp(morphTime, 0, 1);
@@ -77,10 +75,10 @@ static class Program
                 screenPoint += centre;
 
                 Vector4 color = Vector4.Lerp(sphereColor, torusColor, morphTime);
-                ImageDrawPixelV(ref image, screenPoint, ColorFromNormalized(color));
+                pixels[(int)screenPoint.Y * Width + (int)screenPoint.X] = color;
             }
 
-            UpdateTexture<Color>(texture, pixels);
+            UpdateTexture<Vector4>(texture, pixels);
             BeginDrawing();
             DrawTextureEx(texture, Vector2.Zero, 0, Scale, Color.White);
             EndDrawing();
