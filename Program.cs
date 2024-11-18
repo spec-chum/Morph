@@ -36,10 +36,8 @@ static class Program
 
         Span<Vector4> pixels = new Vector4[Width * Height];
 
-        Shape sphere = new(GenerateSphere(100, 40, 20),
-            ColorNormalize(Color.DarkGreen));
-        Shape torus = new(GenerateTorus(70, 30, 40, 20),
-            ColorNormalize(Color.Maroon));
+        Shape sphere = new(GenerateSphere(100, 40, 20), ColorNormalize(Color.DarkGreen));
+        Shape torus = new(GenerateTorus(70, 30, 40, 20), ColorNormalize(Color.Maroon));
 
         float morphTime = 0;
         float holdTime = 0;
@@ -89,6 +87,8 @@ static class Program
             DrawTextureEx(texture, Vector2.Zero, 0, Scale, Color.White);
             EndDrawing();
         }
+
+        UnloadTexture(texture);
     }
 
     private static Vector3[] GenerateSphere(int radius, int numPointsHorizontal, int numPointsVertical)
