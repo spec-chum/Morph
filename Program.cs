@@ -18,6 +18,7 @@ static class Program
     const int WindowWidth = Width * Scale;
     const int WindowHeight = Height * Scale;
 
+    const float RotationSpeed = 0.015f;
     const float MorphSpeed = 0.005f;
     const float HoldIncrement = 0.01f;
     const float HoldDuration = 2f;
@@ -36,9 +37,18 @@ static class Program
 
         Span<Vector4> pixels = new Vector4[Width * Height];
 
+        // Generate shapes
         Shape sphere = new(GenerateSphere(100, 40, 20), ColorNormalize(Color.DarkGreen));
         Shape torus = new(GenerateTorus(70, 30, 40, 20), ColorNormalize(Color.Maroon));
 
+        // Pre-calc rotation quaternions
+        Dictionary<float, Quaternion> quats = [];
+        for (float t = 0; t < MathF.Tau; t += RotationSpeed)
+        {
+            quats.Add(t, Quaternion.CreateFromYawPitchRoll(t, t, t));
+        }
+
+        float time = 0;
         float morphTime = 0;
         float holdTime = 0;
         bool isMorphingToTorus = false;
@@ -56,29 +66,25 @@ static class Program
                 if (holdTime >= HoldDuration)
                 {
                     isMorphingToTorus = !isMorphingToTorus;
-                    morphTime = isMorphingToTorus ? 0 : 1;
                     holdTime = 0;
                 }
             }
 
-            float time = (float)GetTime();
-            Matrix4x4 rotationMatrix = Matrix4x4.CreateFromYawPitchRoll(time, time, time);
+            Quaternion rotationQuat = quats[time];
 
             for (int i = 0; i < sphere.Points.Length; i++)
             {
-                // transform points with rotation matrix
-                Vector3 transformedPoint = Vector3.Transform(Vector3.Lerp(sphere.Points[i], torus.Points[i], morphTime),
-                    rotationMatrix);
+                // transform points with rotation quaternion
+                var transformedPoint = Vector3.Transform(Vector3.Lerp(sphere.Points[i], torus.Points[i], morphTime),
+                    rotationQuat);
 
                 // apply simple perspective correction and map to screen space
                 float perspective = 200f - transformedPoint.Z;
                 Vector2 screenPoint = new Vector2(transformedPoint.X, transformedPoint.Y) / perspective * centre;
-
-                // centre screen point
                 screenPoint += centre;
 
                 // lerp colour and draw pixel
-                Vector4 color = Vector4.Lerp(sphere.Color, torus.Color, morphTime);
+                var color = Vector4.Lerp(sphere.Color, torus.Color, morphTime);
                 pixels[((int)screenPoint.Y * Width) + (int)screenPoint.X] = color;
             }
 
@@ -86,14 +92,22 @@ static class Program
             BeginDrawing();
             DrawTextureEx(texture, Vector2.Zero, 0, Scale, Color.White);
             EndDrawing();
+
+            time += RotationSpeed;
+            if (time >= MathF.Tau)
+            {
+                time = 0;
+            }
         }
 
+        // Clean up
         UnloadTexture(texture);
+        CloseWindow();
     }
 
     private static Vector3[] GenerateSphere(int radius, int numPointsHorizontal, int numPointsVertical)
     {
-        Vector3[] points = new Vector3[numPointsHorizontal * numPointsVertical];
+        var points = new Vector3[numPointsHorizontal * numPointsVertical];
 
         float incrementHorizontal = MathF.Tau / numPointsHorizontal;
         float incrementVertical = MathF.PI / numPointsVertical;
@@ -109,7 +123,7 @@ static class Program
                 float y = radius * MathF.Sin(theta) * MathF.Sin(phi);
                 float z = radius * MathF.Cos(phi);
 
-                points[index++] = new Vector3(x, y, z);
+                points[index++] = new(x, y, z);
             }
         }
 
@@ -118,7 +132,7 @@ static class Program
 
     private static Vector3[] GenerateTorus(float ringRadius, float tubeRadius, int numPointsHorizontal, int numPointsVertical)
     {
-        Vector3[] points = new Vector3[numPointsHorizontal * numPointsVertical];
+        var points = new Vector3[numPointsHorizontal * numPointsVertical];
 
         float incrementHorizontal = MathF.Tau / numPointsHorizontal;
         float incrementVertical = MathF.Tau / numPointsVertical;
@@ -134,7 +148,7 @@ static class Program
                 float y = (ringRadius + (tubeRadius * MathF.Cos(phi))) * MathF.Sin(theta);
                 float z = tubeRadius * MathF.Sin(phi);
 
-                points[index++] = new Vector3(x, y, z);
+                points[index++] = new(x, y, z);
             }
         }
 
